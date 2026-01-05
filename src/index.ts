@@ -73,6 +73,11 @@ async function main() {
 
     // 1. PILIH NETWORK ACAK
     const selectedNetwork = NETWORKS[Math.floor(Math.random() * NETWORKS.length)];
+    
+    if (!selectedNetwork) {
+        throw new Error("Gagal memilih network (Array kosong?)");
+    }
+
     console.log(`🌍 Target Hari Ini: **${selectedNetwork.name}**`);
 
     // Setup Provider & Wallet
