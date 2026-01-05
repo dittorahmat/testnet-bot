@@ -60,12 +60,17 @@ async function main() {
     }
 
     // Setup Contract WETH
-    const wethContract = new ethers.Contract(WETH_ADDRESS, WETH_ABI, wallet);
+    // Define minimal interface for WETH to satisfy TypeScript
+    const wethContract = new ethers.Contract(WETH_ADDRESS, WETH_ABI, wallet) as unknown as ethers.Contract & {
+        deposit: (options?: { value: bigint }) => Promise<ethers.ContractTransactionResponse>;
+        withdraw: (wad: bigint) => Promise<ethers.ContractTransactionResponse>;
+    };
 
     try {
         // Tentukan Aksi Acak: 0 = Wrap (Deposit), 1 = Unwrap (Withdraw)
         const action = Math.random() > 0.5 ? "WRAP" : "UNWRAP";
         // Jumlah acak kecil (0.00001 - 0.00005 ETH)
+        // Convert to BigInt properly for v6
         const amount = ethers.parseEther((Math.random() * (0.00005 - 0.00001) + 0.00001).toFixed(7));
         
         let tx;
