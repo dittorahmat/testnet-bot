@@ -12,18 +12,19 @@ An advanced, modular, and automated cryptocurrency testnet bot designed to gener
 ## 🌟 Key Features
 
 *   **⛓️ Multi-Chain Support**: Automatically switches between **Base Sepolia**, **Optimism Sepolia**, and **Arbitrum Sepolia**.
-*   **🔄 Smart Contract Interaction**: Performs WETH Wrap/Unwrap (Swap) operations to generate meaningful contract interaction history.
-*   **🏗️ Automated Deployment**: Randomly deploys custom Smart Contracts to build a "Developer" profile on-chain.
+*   **🔄 Smart Contract Interaction**: Performs WETH Wrap/Unwrap (Swap) operations.
+*   **🎨 NFT Minting**: Deploys unique NFT contracts and mints tokens to your wallet.
+*   **🏗️ Automated Deployment**: Randomly deploys custom Smart Contracts to build a "Developer" profile.
 *   **🎲 Human-Like Behavior**: Features randomized transaction amounts, network selection, and daily scheduling.
 *   **📱 Telegram Notifications**: Real-time status reports sent directly to your smartphone.
-*   **☁️ Serverless Execution**: Powered by **GitHub Actions** - runs 24/7 for free without a dedicated VPS.
+*   **☁️ Serverless Execution**: Powered by **GitHub Actions** - runs 24/7 for free.
 
 ## 🛠️ Tech Stack
 
 *   **Language**: TypeScript (ES Modules)
 *   **Blockchain**: Ethers.js v6
 *   **Automation**: GitHub Actions (Cron Jobs)
-*   **Development**: Node.js, ts-node
+*   **Architecture**: Modular Clean Code
 
 ---
 
@@ -36,13 +37,11 @@ An advanced, modular, and automated cryptocurrency testnet bot designed to gener
 
 ### 2. Installation
 ```bash
-git clone https://github.com/dittorahmat/testnet-bot.git
-cd testnet-bot
 npm install
 ```
 
 ### 3. Local Configuration
-Create a `.env` file in the root directory:
+Create a `.env` file:
 ```ini
 PRIVATE_KEY=your_private_key_here
 TELEGRAM_BOT_TOKEN=your_bot_token
@@ -50,29 +49,30 @@ TELEGRAM_CHAT_ID=your_chat_id
 ```
 
 ### 4. GitHub Automation Setup
-To run the bot automatically every day:
-1.  Fork or Push this repo to your private/public GitHub account.
+1.  Push this repo to your GitHub (Private recommended).
 2.  Go to **Settings > Secrets and variables > Actions**.
-3.  Add the following **Secrets**:
-    *   `PRIVATE_KEY`: Your wallet private key.
-    *   `TELEGRAM_BOT_TOKEN`: Your Telegram bot token from @BotFather.
-    *   `TELEGRAM_CHAT_ID`: Your Telegram user ID from @userinfobot.
+3.  Add `PRIVATE_KEY`, `TELEGRAM_BOT_TOKEN`, and `TELEGRAM_CHAT_ID`.
+
+---
+
+## 💡 Maximizing Airdrop Chances
+
+To increase your eligibility for high-value airdrops:
+1.  **Gitcoin Passport**: Aim for a score of **20+** at [passport.gitcoin.co](https://passport.gitcoin.co/).
+2.  **Mainnet Balance**: Hold a small amount ($10+) of ETH on Ethereum Mainnet as "dust".
+3.  **Active Participation**: Occasionally join the Discord or follow the Twitter of the networks you are farming.
+4.  **Governance**: If you receive small airdrops, participate in DAO voting on [Snapshot.org](https://snapshot.org/).
 
 ---
 
 ## 📂 Project Structure
 ```text
 src/
-├── actions/        # Blockchain interaction logic (Swap, Deploy)
-├── services/       # External services (Telegram)
+├── actions/        # Logic for Swap, Deploy, and NFT Minting
+├── services/       # Telegram notification service
 ├── config.ts       # Network configurations & ABI
-└── index.ts        # Main entry point & scheduler logic
+└── index.ts        # Main orchestrator
 ```
 
-## ⚠️ Disclaimer
-This project is for **educational purposes only**. Automated interaction with blockchain networks can be subject to specific terms of service. Use at your own risk. Always use a dedicated testnet wallet with no mainnet funds.
-
----
-
 ## 📜 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.

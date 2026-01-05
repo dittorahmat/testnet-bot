@@ -1,13 +1,14 @@
-# Testnet Crypto Bot (Expert)
+# Testnet Crypto Bot (Expert Plus)
 
 ## Project Overview
 This project is an automated bot designed to generate organic on-chain activity on cryptocurrency testnets. It is built with **Node.js** and **TypeScript**, utilizing **GitHub Actions** for daily scheduled execution.
 
 ### Key Features
 *   **🤖 Automated Farming**: Runs automatically every day via GitHub Actions.
-*   **⛓️ Multi-Chain Support**: Capable of switching between networks (Base, Optimism, Arbitrum, etc.) to maximize airdrop coverage.
-*   **🔄 Smart Contract Interaction**: Performs WETH Wrap/Unwrap (Swap) instead of just basic transfers.
-*   **🎲 Human-Like Behavior**: Uses random transaction amounts, random networks, and random delays.
+*   **⛓️ Multi-Chain Support**: Switches randomly between **Base**, **Optimism**, and **Arbitrum Sepolia**.
+*   **🔄 Smart Contract Interaction**: Performs WETH Wrap/Unwrap (Swap) for DeFi footprint.
+*   **🎨 NFT Minting**: Automatically deploys NFT contracts and mints tokens to the wallet.
+*   **🏗️ Custom Deployment**: Deploys unique Smart Contracts to simulate developer activity.
 *   **📱 Telegram Notifications**: Sends real-time detailed reports to your smartphone.
 
 ## Technologies
@@ -24,35 +25,22 @@ This project is an automated bot designed to generate organic on-chain activity 
 PRIVATE_KEY=your_wallet_private_key
 TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
 TELEGRAM_CHAT_ID=987654321
-# RPC URLs are now managed inside src/config.ts or index.ts logic
 ```
 
 ### 2. GitHub Actions Secrets
 Add these to your Repo -> Settings -> Secrets -> Actions:
-*   `PRIVATE_KEY`
-*   `TELEGRAM_BOT_TOKEN`
-*   `TELEGRAM_CHAT_ID`
+*   `PRIVATE_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
 
-## How to Run
-
-### Manual (Local)
-```bash
-# Install dependencies
-npm install
-
-# Build the project (Required for production/GitHub)
-npm run build
-
-# Run the bot (compiled version)
-node dist/index.js
-```
-
-### Automatic (GitHub)
-*   **Schedule**: Daily at 00:00 UTC (07:00 WIB).
-*   **Manual Trigger**: Go to "Actions" tab -> "Daily Testnet Bot" -> "Run workflow".
+## Airdrop Success Strategy
+To maximize chances of a "Jackpot" airdrop:
+1.  **Human Score**: Build a [Gitcoin Passport](https://passport.gitcoin.co/) score of 20+.
+2.  **Mainnet Dust**: Keep $10-$20 worth of ETH on Ethereum Mainnet to prove the wallet is not a bot.
+3.  **Consistency**: Let this bot run daily. Consistency is often valued more than high volume.
+4.  **On-Chain DNA**: Occasionally interact with official DEXs/Bridges manually to add variety.
 
 ## Roadmap / Next Levels
 *   [x] **Level 1**: Basic Transfer & Automation
 *   [x] **Level 2**: Smart Contract Interaction (WETH Swap)
 *   [x] **Level 3**: Multi-Chain Support (Base, Optimism, Arbitrum)
-*   [x] **Level 4**: Deploy Custom Smart Contracts (Create unique on-chain footprint)
+*   [x] **Level 4**: Deploy Contracts & NFT Minting
+*   [x] **Level 5**: Modular Refactoring (Clean Code)
