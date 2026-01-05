@@ -4,16 +4,16 @@ import { NETWORKS } from "./config.js";
 import { sendTelegramNotification } from "./services/telegram.js";
 import { performSwap } from "./actions/swap.js";
 import { performDeploy } from "./actions/deploy.js";
+import { performNFTMint } from "./actions/nft.js";
 
 dotenv.config();
 
 async function main() {
-    console.log("🚀 Starting Modular Testnet Bot...");
+    console.log("🚀 Starting Expert Multi-Chain Bot...");
 
     const privateKey = process.env.PRIVATE_KEY;
     if (!privateKey) throw new Error("Private Key missing");
 
-    // Select random network
     const network = NETWORKS[Math.floor(Math.random() * NETWORKS.length)];
     if (!network) throw new Error("Network selection failed");
 
@@ -31,15 +31,19 @@ async function main() {
             return;
         }
 
-        const isDeployDay = Math.random() < 0.2;
+        const rand = Math.random();
         let reportMsg = "";
 
-        if (isDeployDay) {
+        if (rand < 0.1) {
+            // 10% Chance for NFT Minting
+            const { contractAddress, tokenId, hash } = await performNFTMint(wallet);
+            reportMsg = `🎨 *NFT Minted!*\n🌍 Chain: ${network.name}\n📍 Contract: \`${contractAddress}\`\n🆔 Token ID: ${tokenId}\n🔗 [Explorer](${network.explorer}${hash})`;
+        } else if (rand < 0.2) {
+            // 10% Chance for Contract Deployment
             const { address } = await performDeploy(wallet);
-            reportMsg = `🚀 *Contract Deployed*\n🌍 Chain: ${network.name}\n📍 Addr: 
-${address}
-🔗 [Explorer](${network.explorer}${address})`;
+            reportMsg = `🏗️ *Contract Deployed*\n🌍 Chain: ${network.name}\n📍 Addr: \`${address}\`\n🔗 [Explorer](${network.explorer}${address})`;
         } else {
+            // 80% Chance for Regular Swap
             const { action, amount, hash } = await performSwap(wallet, network.wethAddress);
             reportMsg = `🤖 *Daily Activity*\n🌍 Chain: ${network.name}\n✅ Action: ${action}\n💰 Value: ${ethers.formatEther(amount)} ETH\n🔗 [Explorer](${network.explorer}${hash})`;
         }
