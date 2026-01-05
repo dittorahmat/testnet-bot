@@ -37,6 +37,14 @@ const WETH_ABI = [
     "function withdraw(uint256 wad) public"
 ];
 
+// --- LEVEL 4: SIMPLE STORAGE CONTRACT ---
+// Bytecode dan ABI contract sederhana yang hanya menyimpan satu angka.
+const STORAGE_ABI = [
+    "function store(uint256 num) public",
+    "function retrieve() public view returns (uint256)"
+];
+const STORAGE_BYTECODE = "0x608060405234801561001057600080fd5b5060bf8061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80632e64cec11460375780636057361d146051575b600080fd5b603d606d565b6040518082815260200191505060405180910390f35b606b60048036036020811015606557600080fd5b81019080803590602001909291905050506073565b005b60008054905090565b806000819055505056fea2646970667358221220d9178494191316531304d9c02507856350e1815124976767663242131232321464736f6c63430008120033";
+
 // --- TELEGRAM NOTIFIER ---
 async function sendTelegramNotification(message: string) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -66,75 +74,93 @@ async function sendTelegramNotification(message: string) {
 
 // --- FUNGSI UTAMA ---
 async function main() {
-    console.log("🚀 Bot Level 3: Multi-Chain Support...");
+    console.log("🚀 Bot Level 4: Deploy & Interact...");
 
     const privateKey = process.env.PRIVATE_KEY;
     if (!privateKey) throw new Error("Private Key belum diatur di .env!");
 
     // 1. PILIH NETWORK ACAK
     const selectedNetwork = NETWORKS[Math.floor(Math.random() * NETWORKS.length)];
-    
-    if (!selectedNetwork) {
-        throw new Error("Gagal memilih network (Array kosong?)");
-    }
+    if (!selectedNetwork) throw new Error("Gagal memilih network");
 
     console.log(`🌍 Target Hari Ini: **${selectedNetwork.name}**`);
 
-    // Setup Provider & Wallet
     const provider = new ethers.JsonRpcProvider(selectedNetwork.rpcUrl);
     const wallet = new ethers.Wallet(privateKey, provider);
     console.log(`👤 Wallet: ${wallet.address}`);
 
-    // Cek Saldo
     try {
         const balanceStart = await provider.getBalance(wallet.address);
         const balanceEth = ethers.formatEther(balanceStart);
-        console.log(`💰 Saldo di ${selectedNetwork.name}: ${balanceEth} ETH`);
+        console.log(`💰 Saldo: ${balanceEth} ETH`);
 
-        if (parseFloat(balanceEth) < 0.0005) {
-            console.log("⚠️ Saldo terlalu sedikit, skip network ini.");
-            await sendTelegramNotification(`⚠️ *Saldo Sekarat di ${selectedNetwork.name}* (${balanceEth} ETH). Skip dulu.`);
+        if (parseFloat(balanceEth) < 0.001) {
+            await sendTelegramNotification(`⚠️ *Saldo Sekarat di ${selectedNetwork.name}* (${balanceEth} ETH). Skip.`);
             return;
         }
 
-        // Setup Contract WETH (Type Safe)
-        const wethContract = new ethers.Contract(selectedNetwork.wethAddress, WETH_ABI, wallet) as unknown as ethers.Contract & {
-            deposit: (options?: { value: bigint }) => Promise<ethers.ContractTransactionResponse>;
-            withdraw: (wad: bigint) => Promise<ethers.ContractTransactionResponse>;
-        };
+        // --- LEVEL 4 LOGIC: 20% Chance to Deploy Contract ---
+        // Kita buat deploy contract ini "Jarang" terjadi (misal 20% kemungkinan)
+        // karena gas-nya lebih mahal dari swap biasa, dan biar terlihat eksklusif.
+        const isDeployDay = Math.random() < 0.2; 
 
-        // 2. TENTUKAN AKSI (WRAP/UNWRAP)
-        const action = Math.random() > 0.5 ? "WRAP" : "UNWRAP";
-        const amount = ethers.parseEther((Math.random() * (0.00002 - 0.00001) + 0.00001).toFixed(7));
-        
-        let tx;
-        console.log(`🎲 Misi: **${action}** ${ethers.formatEther(amount)} ETH`);
+        if (isDeployDay) {
+            console.log("🏗️ HARI SPESIAL! Melakukan Deployment Contract...");
+            
+            const factory = new ethers.ContractFactory(STORAGE_ABI, STORAGE_BYTECODE, wallet);
+            const contract = await factory.deploy();
+            
+            console.log("⏳ Deploying...");
+            await contract.waitForDeployment();
+            const contractAddress = await contract.getAddress();
+            
+            console.log(`✅ Contract Deployed at: ${contractAddress}`);
 
-        if (action === "WRAP") {
-            console.log("⏳ Executing Deposit...");
-            tx = await wethContract.deposit({ value: amount });
+            const msg = `🚀 *Bot Level 4: DEPLOYMENT ALERT*\n\n` +
+                        `🌍 *Chain:* ${selectedNetwork.name}\n` +
+                        `🏗️ *Action:* Deploy Smart Contract\n` +
+                        `📍 *Address:* 
+${contractAddress}
+` +
+                        `🔗 [Explorer](${selectedNetwork.explorer}${contractAddress})`;
+            
+            await sendTelegramNotification(msg);
+
         } else {
-            try {
-                console.log("⏳ Executing Withdraw...");
-                tx = await wethContract.withdraw(amount);
-            } catch (err) {
-                console.log("⚠️ Gagal Withdraw (No WETH?), switch ke Deposit...");
+            // --- LEVEL 2 & 3 FALLBACK (Swap WETH) ---
+            console.log("🔄 Hari Biasa: Lanjut Swap WETH...");
+            
+            const wethContract = new ethers.Contract(selectedNetwork.wethAddress, WETH_ABI, wallet) as unknown as ethers.Contract & {
+                deposit: (options?: { value: bigint }) => Promise<ethers.ContractTransactionResponse>;
+                withdraw: (wad: bigint) => Promise<ethers.ContractTransactionResponse>;
+            };
+
+            const action = Math.random() > 0.5 ? "WRAP" : "UNWRAP";
+            const amount = ethers.parseEther((Math.random() * (0.00002 - 0.00001) + 0.00001).toFixed(7));
+            
+            let tx;
+            if (action === "WRAP") {
                 tx = await wethContract.deposit({ value: amount });
+            } else {
+                try {
+                    tx = await wethContract.withdraw(amount);
+                } catch {
+                    console.log("⚠️ Gagal Withdraw, switch ke Deposit...");
+                    tx = await wethContract.deposit({ value: amount });
+                }
             }
+
+            console.log(`✅ Hash: ${tx.hash}`);
+            await tx.wait(1);
+
+            const msg = `🤖 *Bot Daily Report*\n\n` +
+                        `🌍 *Chain:* ${selectedNetwork.name}\n` +
+                        `✅ *Aksi:* ${action}\n` +
+                        `💰 *Nilai:* ${ethers.formatEther(amount)} ETH\n` +
+                        `🔗 [Explorer](${selectedNetwork.explorer}${tx.hash})`;
+            
+            await sendTelegramNotification(msg);
         }
-
-        console.log(`✅ Hash: ${tx.hash}`);
-        await tx.wait(1);
-        console.log("🎉 Transaksi Sukses!");
-
-        // Lapor Telegram
-        const msg = `🤖 *Bot Level 3 Report*\n\n` +
-                    `🌍 *Chain:* ${selectedNetwork.name}\n` +
-                    `✅ *Aksi:* ${action}\n` +
-                    `💰 *Nilai:* ${ethers.formatEther(amount)} ETH\n` +
-                    `🔗 [Explorer](${selectedNetwork.explorer}${tx.hash})`;
-        
-        await sendTelegramNotification(msg);
 
     } catch (error: any) {
         console.error("❌ Error:", error.message);
