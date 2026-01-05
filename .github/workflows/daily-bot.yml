@@ -1,0 +1,32 @@
+name: Daily Testnet Bot
+
+on:
+  schedule:
+    # Jalan setiap hari jam 00:00 UTC (sekitar jam 07:00 WIB)
+    - cron: '0 0 * * *'
+  # Biar bisa dijalankan manual juga dari tab 'Actions' di GitHub
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Run Bot
+      # Env vars diambil dari GitHub Secrets (Settingan Rahasia di Repo)
+      env:
+        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        RPC_URL: ${{ secrets.RPC_URL }}
+      run: npx ts-node src/index.ts
