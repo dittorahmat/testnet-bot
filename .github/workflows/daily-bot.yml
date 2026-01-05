@@ -31,4 +31,6 @@ jobs:
         RPC_URL: ${{ secrets.RPC_URL }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      run: node --loader ts-node/esm src/index.ts
+      run: |
+        npm run build
+        node dist/index.js

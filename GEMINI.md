@@ -1,61 +1,64 @@
-# Testnet Crypto Bot
+# Testnet Crypto Bot (Advanced)
 
 ## Project Overview
-This project is a Node.js-based automation tool designed to interact with cryptocurrency testnets (currently configured for **Base Sepolia**). Its primary purpose is to generate on-chain activity (transactions) for a specific wallet, often used for retroactive airdrop farming or testing network performance.
-
-The bot utilizes **Ethers.js** to communicate with the blockchain and is written in **TypeScript** using modern ES Module standards.
+This project is an automated bot designed to generate organic on-chain activity on cryptocurrency testnets (currently **Base Sepolia**). It is built with **Node.js** and **TypeScript**, utilizing **GitHub Actions** for daily scheduled execution without a dedicated server.
 
 ### Key Features
-*   **Wallet Connection**: Securely connects using a private key stored in environment variables.
-*   **Balance Check**: Verifies sufficient funds before attempting transactions to prevent errors.
-*   **Auto-Transaction**: Performs self-transfer transactions (sending a tiny amount of ETH to the sender's own address) to increment the transaction count (nonce) with minimal cost.
-*   **Explorer Integration**: Outputs direct links to the block explorer for verified transactions.
+*   **🤖 Automated Farming**: Runs automatically every day at 07:00 WIB (00:00 UTC) via GitHub Actions.
+*   **🎲 Human-Like Behavior**: Uses random transaction amounts and delays to mimic real user activity.
+*   **📱 Telegram Notifications**: Sends real-time reports to your smartphone upon task completion or failure.
+*   **🛡️ Secure**: Private keys and API tokens are managed via GitHub Secrets, never exposed in the code.
+*   **💰 Safety Checks**: Automatically checks balance before executing to prevent wasted gas attempts.
 
-## Technologies & Architecture
-*   **Runtime**: Node.js
-*   **Language**: TypeScript (configured as ES Modules)
-*   **Libraries**:
-    *   `ethers` (v6): For JSON-RPC communication and wallet management.
-    *   `dotenv`: For environment variable management.
-    *   `ts-node`: For executing TypeScript files directly without a separate build step during development.
+## Technologies
+*   **Runtime**: Node.js (ES Modules)
+*   **Language**: TypeScript
+*   **Blockchain Lib**: `ethers` v6
+*   **CI/CD**: GitHub Actions (Cron Job)
+*   **Utilities**: `dotenv` (env management)
 
 ## Setup & Configuration
 
-### Prerequisites
-*   Node.js (v18+ recommended)
-*   A crypto wallet (e.g., MetaMask) with access to its Private Key.
-*   Testnet ETH (can be obtained from faucets like Bware Labs, QuickNode, or Chainlink).
-
-### Environment Variables
-Create a `.env` file in the root directory with the following keys:
+### 1. Environment Variables (`.env`)
+For local development, create a `.env` file:
 
 ```ini
-PRIVATE_KEY=your_wallet_private_key_here
-RPC_URL=https://sepolia.base.org
+PRIVATE_KEY=your_wallet_private_key
+RPC_URL=https://base-sepolia-rpc.publicnode.com
+TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
+TELEGRAM_CHAT_ID=987654321
 ```
 
-*   **PRIVATE_KEY**: The private key of the wallet to be automated. **Never share this.**
-*   **RPC_URL**: The endpoint for the blockchain network (default is Base Sepolia).
+### 2. GitHub Actions Secrets
+To enable automation, go to your GitHub Repo -> **Settings** -> **Secrets and variables** -> **Actions** and add:
+*   `PRIVATE_KEY`
+*   `RPC_URL`
+*   `TELEGRAM_BOT_TOKEN`
+*   `TELEGRAM_CHAT_ID`
 
-## Building and Running
+## How to Run
 
-### Installation
-Install the required dependencies:
+### Manual (Local)
 ```bash
+# Install dependencies
 npm install
-```
 
-### Execution
-Run the bot directly using `ts-node`:
-```bash
+# Run the bot
 npx ts-node src/index.ts
+
+# Test Telegram connection
+npx ts-node src/test-telegram.ts
 ```
 
-There is currently no build script defined in `package.json` for production compilation, as this is primarily a development/scripting tool.
+### Automatic (GitHub)
+The bot is scheduled in `.github/workflows/daily-bot.yml`.
+*   **Schedule**: Daily at 00:00 UTC.
+*   **Manual Trigger**: Go to "Actions" tab -> "Daily Testnet Bot" -> "Run workflow".
 
-## Development Conventions
-
-*   **Module System**: The project is configured as **ES Modules** (`"type": "module"` in `package.json` and `"module": "nodenext"` in `tsconfig.json`). Ensure all imports use ESM syntax.
-*   **Code Structure**: Source code resides in the `src/` directory.
-*   **Safety**: The script includes a balance check (`< 0.001 ETH`) to prevent execution on empty wallets.
-*   **Error Handling**: Basic `try-catch` blocks are used around transaction logic to handle network timeouts or insufficient funds gracefully.
+## Roadmap / Next Levels
+*   [x] Basic Transfer (Self-send)
+*   [x] GitHub Automation
+*   [x] Telegram Alerts
+*   [ ] **Level 2**: Smart Contract Interaction (WETH Swap/Wrap)
+*   [ ] **Level 3**: Multi-Chain Support (Monad, Berachain)
+*   [ ] **Level 4**: Deploy Custom Smart Contracts
