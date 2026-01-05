@@ -29,4 +29,4 @@ jobs:
       env:
         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         RPC_URL: ${{ secrets.RPC_URL }}
-      run: npx ts-node src/index.ts
+      run: node --loader ts-node/esm src/index.ts
