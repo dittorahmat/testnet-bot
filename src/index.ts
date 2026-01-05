@@ -3,19 +3,25 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-// Fungsi untuk mengirim pesan ke Telegram
+// --- KONFIGURASI SMART CONTRACT ---
+const WETH_ADDRESS = "0x4200000000000000000000000000000000000006"; // Base Sepolia WETH
+const WETH_ABI = [
+    "function deposit() public payable",
+    "function withdraw(uint256 wad) public"
+];
+
+// --- TELEGRAM NOTIFIER ---
 async function sendTelegramNotification(message: string) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
     if (!botToken || !chatId) {
-        console.log("⚠️  Telegram Token/Chat ID tidak ditemukan. Skip notifikasi.");
+        console.log("⚠️  Skip notifikasi (Token/ID kosong).");
         return;
     }
 
     try {
-        const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-        const response = await fetch(url, {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -25,88 +31,80 @@ async function sendTelegramNotification(message: string) {
                 disable_web_page_preview: true
             })
         });
-        
-        if (response.ok) {
-            console.log("✅ Notifikasi Telegram terkirim!");
-        } else {
-            console.error("❌ Gagal kirim notifikasi Telegram:", await response.text());
-        }
+        console.log("✅ Notifikasi Telegram terkirim!");
     } catch (error) {
-        console.error("❌ Error koneksi Telegram:", error);
+        console.error("❌ Gagal kirim Telegram:", error);
     }
 }
 
+// --- FUNGSI UTAMA ---
 async function main() {
-    console.log("🚀 Testnet Bot Starting (Advanced Mode)...");
+    console.log("🚀 Bot Level 2: Smart Contract Interaction...");
 
     const rpcUrl = process.env.RPC_URL;
-    if (!rpcUrl) throw new Error("RPC_URL tidak ditemukan");
-    
-    const provider = new ethers.JsonRpcProvider(rpcUrl);
-
     const privateKey = process.env.PRIVATE_KEY;
-    if (!privateKey) {
-        console.error("⚠️  Private Key belum diatur!");
-        return;
-    }
+    
+    if (!rpcUrl || !privateKey) throw new Error("Cek .env Anda!");
 
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
     const wallet = new ethers.Wallet(privateKey, provider);
-    console.log(`✅ Wallet: ${wallet.address}`);
+    console.log(`👤 Wallet: ${wallet.address}`);
 
+    // Cek Saldo
     const balanceStart = await provider.getBalance(wallet.address);
-    const balanceEth = ethers.formatEther(balanceStart);
-    console.log(`💰 Saldo: ${balanceEth} ETH`);
+    console.log(`💰 Saldo: ${ethers.formatEther(balanceStart)} ETH`);
 
-    if (parseFloat(balanceEth) < 0.001) {
-        const msg = `⚠️ *Saldo Sekarat!* 
-Address: 
-${wallet.address}
-Saldo: ${balanceEth} ETH
-Mohon isi faucet segera.`;
-        await sendTelegramNotification(msg);
+    if (parseFloat(ethers.formatEther(balanceStart)) < 0.001) {
+        await sendTelegramNotification(`⚠️ *Saldo Sekarat!* Isi faucet segera.`);
         return;
     }
 
-    console.log("\n🔄 Mempersiapkan transaksi...");
+    // Setup Contract WETH
+    const wethContract = new ethers.Contract(WETH_ADDRESS, WETH_ABI, wallet);
 
     try {
-        // RANDOMIZER: Jumlah acak antara 0.00001 sampai 0.00005 ETH
-        const randomAmount = (Math.random() * (0.00005 - 0.00001) + 0.00001).toFixed(7);
-        console.log(`🎲 Jumlah Random: ${randomAmount} ETH`);
+        // Tentukan Aksi Acak: 0 = Wrap (Deposit), 1 = Unwrap (Withdraw)
+        const action = Math.random() > 0.5 ? "WRAP" : "UNWRAP";
+        // Jumlah acak kecil (0.00001 - 0.00005 ETH)
+        const amount = ethers.parseEther((Math.random() * (0.00005 - 0.00001) + 0.00001).toFixed(7));
+        
+        let tx;
+        console.log(`🎲 Misi Hari Ini: **${action}** ETH sebesar ${ethers.formatEther(amount)}`);
 
-        const tx = {
-            to: wallet.address,
-            value: ethers.parseEther(randomAmount.toString()),
-        };
+        if (action === "WRAP") {
+            // Deposit: Kirim ETH, dapat WETH
+            console.log("⏳ Mengirim transaksi WRAP (Deposit)...");
+            tx = await wethContract.deposit({ value: amount });
+        } else {
+            // Withdraw: Kirim WETH, dapat ETH balik
+            // (Cek dulu apa kita punya WETH, kalau ga punya paksa Wrap dulu)
+            // Sederhananya, kita pakai try-catch. Kalau withdraw gagal (krn ga punya WETH), kita ganti jadi Wrap.
+            try {
+                console.log("⏳ Mengirim transaksi UNWRAP (Withdraw)...");
+                tx = await wethContract.withdraw(amount);
+            } catch (err) {
+                console.log("⚠️ Gagal Unwrap (Mungkin saldo WETH kosong). Ganti ke Wrap...");
+                tx = await wethContract.deposit({ value: amount });
+            }
+        }
 
-        console.log("⏳ Mengirim transaksi...");
-        const transactionResponse = await wallet.sendTransaction(tx);
+        console.log(`✅ Hash: ${tx.hash}`);
+        await tx.wait(1);
+        console.log("🎉 Transaksi Sukses!");
+
+        // Lapor Telegram
+        const msg = `🤖 *Bot Level 2 Report*\n\n` +
+                    `✅ *Aksi:* ${action} (Smart Contract)\n` +
+                    `💰 *Nilai:* ${ethers.formatEther(amount)} ETH\n` +
+                    `🔗 [Cek di Explorer](https://sepolia.basescan.org/tx/${tx.hash})`;
         
-        console.log(`✅ Hash: ${transactionResponse.hash}`);
-        console.log("⏳ Menunggu konfirmasi...");
-        
-        await transactionResponse.wait(1);
-        
-        console.log("🎉 Sukses!");
-        
-        // Kirim Laporan ke Telegram
-        const message = `🚀 *Laporan Harian Bot Testnet*\n\n` +
-                        `✅ *Status:* Transaksi Berhasil\n` +
-                        `💰 *Amount:* ${randomAmount} ETH\n` +
-                        `⛽ *Network:* Base Sepolia\n` +
-                        `🔗 [Lihat di Explorer](https://sepolia.basescan.org/tx/${transactionResponse.hash})`;
-        
-        await sendTelegramNotification(message);
+        await sendTelegramNotification(msg);
 
     } catch (error: any) {
-        console.error("❌ Transaksi Gagal:", error.message);
-        await sendTelegramNotification(`❌ *Bot Gagal!* 
-Error: ${error.message}`);
+        console.error("❌ Error:", error.message);
+        await sendTelegramNotification(`❌ Bot Error: ${error.message}`);
         process.exit(1);
     }
 }
 
-main().catch((error) => {
-    console.error(error);
-    process.exit(1);
-});
+main().catch(console.error);
